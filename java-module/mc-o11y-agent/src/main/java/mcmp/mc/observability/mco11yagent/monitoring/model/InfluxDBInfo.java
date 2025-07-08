@@ -1,8 +1,7 @@
 package mcmp.mc.observability.mco11yagent.monitoring.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,29 +11,33 @@ import java.util.Objects;
 @Getter
 @Setter
 @Builder
-@ApiModel(description = "InfluxDB information")
+@Schema(description = "InfluxDB information")
 public class InfluxDBInfo {
-    @ApiModelProperty(value = "Sequence number")
+
+    @Schema(description = "Sequence number", example = "1")
     @JsonProperty("seq")
     private Long seq;
 
-    @ApiModelProperty(value = "Host url", example = "http://localhost:8086")
+
+    @Schema(description = "Host url", example = "http://localhost:8086")
     @JsonProperty("url")
     private String url;
 
-    @ApiModelProperty(value = "Database name", example = "mc-agent")
+
+    @Schema(description = "Database name", example = "mc-agent")
     @JsonProperty("database")
     private String database;
 
-    @ApiModelProperty(value = "Data retention policy name", example = "autogen")
+
+    @Schema(description = "Data retention policy name", example = "autogen")
     @JsonProperty("retention_policy")
     private String retentionPolicy;
 
-    @ApiModelProperty(value = "Authentication username", example = "mc-agent")
+    @Schema(description = "Authentication username", example = "mc-agent")
     @JsonProperty("username")
     private String username;
 
-    @ApiModelProperty(value = "Authentication password", example = "mc-agent")
+    @Schema(description = "Authentication password", example = "mc-agent")
     @JsonProperty("password")
     private String password;
 

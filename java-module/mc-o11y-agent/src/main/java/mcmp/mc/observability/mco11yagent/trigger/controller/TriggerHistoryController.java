@@ -1,10 +1,11 @@
 package mcmp.mc.observability.mco11yagent.trigger.controller;
 
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import mcmp.mc.observability.mco11yagent.monitoring.model.dto.ResBody;
-import mcmp.mc.observability.mco11yagent.trigger.common.TriggerConstants;
 import mcmp.mc.observability.mco11yagent.trigger.annotation.TriggerBase64Encode;
+import mcmp.mc.observability.mco11yagent.trigger.common.TriggerConstants;
 import mcmp.mc.observability.mco11yagent.trigger.model.TriggerHistoryInfo;
 import mcmp.mc.observability.mco11yagent.trigger.service.TriggerHistoryService;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +19,7 @@ public class TriggerHistoryController {
 
     private final TriggerHistoryService triggerHistoryService;
 
-    @ApiOperation(value = "Get Trigger History all list")
+    @Operation(summary = "Get Trigger History all list")
     @TriggerBase64Encode
     @GetMapping
     public ResBody<List<TriggerHistoryInfo>> list(@RequestParam("policySeq") Long policySeq) {
@@ -27,7 +28,7 @@ public class TriggerHistoryController {
         return res;
     }
 
-    @ApiOperation(value = "Get Trigger History detail", hidden = true)
+    @Hidden // OpenAPI 문서에서 숨김 처리
     @TriggerBase64Encode
     @GetMapping("/{historySeq}")
     public ResBody<TriggerHistoryInfo> detail(@PathVariable("historySeq") Long seq) {

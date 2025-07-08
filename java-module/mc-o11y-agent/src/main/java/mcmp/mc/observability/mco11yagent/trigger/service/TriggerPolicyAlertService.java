@@ -26,8 +26,7 @@ import org.springframework.util.CollectionUtils;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
-import javax.mail.internet.MimeMessage;
-
+import jakarta.mail.internet.MimeMessage;
 import java.io.File;
 import java.io.InputStream;
 import java.util.List;
@@ -99,7 +98,7 @@ public class TriggerPolicyAlertService {
             throw new TriggerResultCodeException(ResultCode.NOT_FOUND_DATA, "Trigger Policy is not exist. PolicySeq : {}", dto.getPolicySeq());
 
         TriggerEmailUserInfo info = new TriggerEmailUserInfo();
-        info.setCreatDto(dto);
+        info.setCreateDto(dto);
         try {
             int result = emailMapper.createEmailUser(info);
             if (result <= 0) {

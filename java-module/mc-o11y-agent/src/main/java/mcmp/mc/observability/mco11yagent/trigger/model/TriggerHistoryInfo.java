@@ -1,7 +1,7 @@
 package mcmp.mc.observability.mco11yagent.trigger.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
 import mcmp.mc.observability.mco11yagent.trigger.annotation.TriggerBase64EncodeField;
@@ -10,49 +10,48 @@ import mcmp.mc.observability.mco11yagent.trigger.annotation.TriggerBase64EncodeF
 @Builder
 public class TriggerHistoryInfo {
 
-    @ApiModelProperty(value = "Sequence by history", example = "1")
+    @Schema(description = "Sequence by history", example = "1")
     @JsonProperty("seq")
     private Long seq;
 
-    @ApiModelProperty(value = "Sequence by trigger policy", example = "1")
+    @Schema(description = "Sequence by trigger policy", example = "1")
     @JsonProperty("policy_seq")
     private Long policySeq;
 
-    @ApiModelProperty(value = "Sequence by trigger target", example = "1")
+    @Schema(description = "Sequence by trigger target", example = "1")
     @JsonProperty("target_seq")
     private Long targetSeq;
 
-    @ApiModelProperty(value = "Namespace Id")
+    @Schema(description = "Namespace Id", example = "ns-abc123")
     @JsonProperty("ns_id")
     private String nsId;
 
-    @ApiModelProperty(value = "Vm Id")
+    @Schema(description = "VM or Target Id", example = "vm-001")
     @JsonProperty("target_id")
     private String targetId;
 
-    @ApiModelProperty(value = "Trigger event target metric name")
+    @Schema(description = "Triggered metric name", example = "cpu")
     @JsonProperty("measurement")
     private String metric;
 
-    @ApiModelProperty(value = "Trigger event alarm details")
+    @Schema(description = "Alarm detail data (raw or encoded)")
     @JsonProperty("data")
     private String data;
 
-    @ApiModelProperty(value = "Trigger event level")
+    @Schema(description = "Trigger severity level", example = "CRITICAL")
     @JsonProperty("level")
     private String level;
 
-    @ApiModelProperty(value = "Base64 Encoded value", example = "localhost")
+    @Schema(description = "Base64 Encoded display name", example = "localhost")
     @TriggerBase64EncodeField
     @JsonProperty("name")
     private String name;
 
-    @ApiModelProperty(value = "The time when the history was inserted into the database", example = "2024-05-24T11:31:55Z")
+    @Schema(description = "Timestamp when the history was saved", example = "2024-05-24T11:31:55Z")
     @JsonProperty("create_at")
     private String createAt;
 
-    @ApiModelProperty(value = "The time when the history occurred", example = "2024-05-24T11:31:55Z")
+    @Schema(description = "Timestamp when the trigger event occurred", example = "2024-05-24T11:31:55Z")
     @JsonProperty("occur_time")
     private String occurTime;
-
 }

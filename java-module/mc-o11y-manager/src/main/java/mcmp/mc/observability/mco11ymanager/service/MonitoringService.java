@@ -49,6 +49,7 @@ public class MonitoringService {
         return tumblebugClient.getNSList();
     }
 
+
     private void configureInputs(String nsId, String mciId, String targetId) {
         MonitoringConfigInfoCreateDTO itemCreateInfo = new MonitoringConfigInfoCreateDTO();
 

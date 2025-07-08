@@ -1,7 +1,7 @@
 package mcmp.mc.observability.mco11yagent.trigger.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,11 +9,11 @@ import lombok.Setter;
 @Setter
 public class ManageTriggerTargetDto {
 
-    @ApiModelProperty(value = "Namespace Id")
+    @Schema(description = "Namespace ID", example = "ns-abc123")
     @JsonProperty("ns_id")
     private String nsId;
 
-    @ApiModelProperty(value = "Vm Id")
+    @Schema(description = "VM or Target ID", example = "vm-001")
     @JsonProperty("target_id")
     private String targetId;
 }

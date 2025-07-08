@@ -1,14 +1,20 @@
-plugins {
-}
-
 dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign:4.1.0'
+    implementation 'io.github.openfeign:feign-httpclient:13.1'
+
+
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+
+
     api 'org.influxdb:influxdb-java:2.23'
     api 'org.apache.commons:commons-lang3:3.12.0'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'com.jcraft:jsch:0.1.44-1'
-    implementation 'io.github.openfeign:feign-httpclient:11.1'
-    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign:3.1.5'
-    implementation 'org.springdoc:springdoc-openapi-ui:1.7.0'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
 }
 
 jar {

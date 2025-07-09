@@ -18,19 +18,38 @@ public class SwaggerConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
             .info(new Info()
-                .title("API Documentation")
+                .title("MC Observability APIs")
                 .version(version)
-                .description("API Documentation for MC Observability Agent")
+                .description("API Documentation for all MC Observability modules")
                 .contact(new Contact().name("MC Team").email("mc@example.com"))
             );
     }
 
+
     @Bean
-    public GroupedOpenApi publicApi() {
+    public GroupedOpenApi agentApi() {
         return GroupedOpenApi.builder()
-            .group("mc-observability")
+            .group("mc-o11y-agent")
             .packagesToScan("mcmp.mc.observability.mco11yagent")
-            .pathsToMatch("/**")
+            .pathsToMatch("/agent/**")
+            .build();
+    }
+
+    @Bean
+    public GroupedOpenApi managerApi() {
+        return GroupedOpenApi.builder()
+            .group("mc-o11y-manager")
+            .packagesToScan("mcmp.mc.observability.mco11ymanager")
+            .pathsToMatch("/manager/**")
+            .build();
+    }
+
+    @Bean
+    public GroupedOpenApi o11yManagerApi() {
+        return GroupedOpenApi.builder()
+            .group("o11y-manager")
+            .packagesToScan("mcmp.mc.observability.o11ymanager")
+            .pathsToMatch("/api/**")
             .build();
     }
 }

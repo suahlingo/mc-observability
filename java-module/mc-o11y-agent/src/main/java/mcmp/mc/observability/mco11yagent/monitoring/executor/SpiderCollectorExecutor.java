@@ -2,9 +2,11 @@ package mcmp.mc.observability.mco11yagent.monitoring.executor;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import mcmp.mc.observability.mco11yagent.monitoring.client.SpiderClient;
 import mcmp.mc.observability.mco11yagent.monitoring.common.Constants;
 import mcmp.mc.observability.mco11yagent.monitoring.model.InfluxDBInfo;
 import mcmp.mc.observability.mco11yagent.monitoring.facade.MonitoringFacadeService;
+import mcmp.mc.observability.mco11yagent.monitoring.model.SpiderMonitoringInfo;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +20,7 @@ public class SpiderCollectorExecutor {
     private Process SPIDER_COLLECTOR_PROCESS = null;
 
     private final MonitoringFacadeService monitoringService;
+    private final SpiderClient spiderClient;
 
     @Value("${feign.cb-spider.monitoring.influxdb_url}")
     private String influxdb_url;
@@ -41,6 +44,8 @@ public class SpiderCollectorExecutor {
         }
     }
 
+
+
     public void startSpiderCollector() {
         if (SPIDER_COLLECTOR_PROCESS == null || !SPIDER_COLLECTOR_PROCESS.isAlive()) {
             String nsId = System.getenv(Constants.PROPERTY_NS_ID);
@@ -51,7 +56,7 @@ public class SpiderCollectorExecutor {
                 return;
             }
 
-            InfluxDBInfo influxDBinfo = InfluxDBInfo.builder()
+            InfluxDBInfo influxDBInfo = InfluxDBInfo.builder()
                 .url(influxdb_url)
                 .database(influxdb_database)
                 .retentionPolicy(influxdb_retention_policy)
@@ -59,9 +64,16 @@ public class SpiderCollectorExecutor {
                 .password(influxdb_password)
                 .build();
 
-            monitoringService.writeSpiderVMMonitoring(influxDBinfo, nsId, mciId, targetId, "1", "1");
+
+            SpiderMonitoringInfo.Data cpuData = spiderClient.getVMMonitoring(nsId, mciId, targetId, "1", "1");
+            SpiderMonitoringInfo.Data diskReadData = spiderClient.getVMMonitoring(nsId, mciId, targetId, "1", "1");
+            SpiderMonitoringInfo.Data diskWriteData = spiderClient.getVMMonitoring(nsId, mciId, targetId, "1", "1");
+            SpiderMonitoringInfo.Data memData = spiderClient.getVMMonitoring(nsId, mciId, targetId, "1", "1");
+
+            monitoringService.writeSpiderVMMonitoring(influxDBInfo, nsId, mciId, targetId, cpuData, diskReadData, diskWriteData, memData);
         }
     }
+
 
     public boolean isSpiderCollectorAlive() {
         return SPIDER_COLLECTOR_PROCESS != null && SPIDER_COLLECTOR_PROCESS.isAlive();

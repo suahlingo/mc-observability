@@ -12,4 +12,9 @@ public class Constants {
     public static final String PROPERTY_NS_ID = "NS_ID";
     public static final String PROPERTY_MCI_ID = "MCI_ID";
     public static final String PROPERTY_TARGET_ID = "TARGET_ID";
+
+
+    public static final String PREFIX_V1 = "/api/o11y";
+    public static final String PREDICTION_PATH = "/insight/predictions";
+    public static final String ANOMALY_PATH = "/insight/anomaly-detection";
 }

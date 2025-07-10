@@ -2,7 +2,6 @@ package mcmp.mc.observability.mco11yagent.monitoring.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import mcmp.mc.observability.mco11yagent.monitoring.client.SpiderClient;
 import mcmp.mc.observability.mco11yagent.monitoring.enums.ResultCode;
 import mcmp.mc.observability.mco11yagent.monitoring.exception.ResultCodeException;
 import mcmp.mc.observability.mco11yagent.monitoring.mapper.InfluxDBMapper;
@@ -10,6 +9,7 @@ import mcmp.mc.observability.mco11yagent.monitoring.mapper.MiningDBMapper;
 import mcmp.mc.observability.mco11yagent.monitoring.model.*;
 import mcmp.mc.observability.mco11yagent.monitoring.model.dto.ResBody;
 import mcmp.mc.observability.mco11yagent.monitoring.util.InfluxDBUtils;
+import org.influxdb.InfluxDB;
 import org.influxdb.dto.BoundParameterQuery;
 import org.influxdb.dto.Point;
 import org.influxdb.dto.QueryResult;
@@ -18,13 +18,10 @@ import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
-import static mcmp.mc.observability.mco11yagent.monitoring.enums.Measurement.*;
 
 @Slf4j
 @Service
@@ -33,28 +30,10 @@ public class InfluxDBService {
 
     private final InfluxDBMapper influxDBMapper;
     private final MiningDBMapper miningDBMapper;
-    private final MonitoringConfigService monitoringConfigService;
-    private final SpiderClient spiderClient;
+
 
     public ResBody<List<InfluxDBInfo>> getList() {
-        List<MonitoringConfigInfo> storageInfoList = monitoringConfigService.list(null, null, null);
-        storageInfoList = storageInfoList.stream().filter(f -> f.getPluginName().equalsIgnoreCase("influxdb")).toList();
-
-        List<InfluxDBInfo> influxDBInfoList = new ArrayList<>();
-        for (MonitoringConfigInfo hostStorageInfo : storageInfoList) {
-            InfluxDBConnector con = new InfluxDBConnector(hostStorageInfo.getPluginConfig());
-            InfluxDBInfo influxDBinfo = InfluxDBInfo.builder()
-                    .url(con.getUrl())
-                    .database(con.getDatabase())
-                    .retentionPolicy(con.getRetentionPolicy())
-                    .username(con.getUsername())
-                    .password(con.getPassword())
-                    .build();
-
-            influxDBInfoList.add(influxDBinfo);
-        }
-
-        syncSummaryInfluxDBList(influxDBInfoList.stream().distinct().collect(Collectors.toList()));
+        List<InfluxDBInfo> influxDBInfoList = influxDBMapper.getInfluxDBInfoList();
 
         ResBody<List<InfluxDBInfo>> res = new ResBody<>();
         res.setData(influxDBMapper.getInfluxDBInfoList());
@@ -62,7 +41,10 @@ public class InfluxDBService {
         return res;
     }
 
-    private void syncSummaryInfluxDBList(List<InfluxDBInfo> influxDBInfoList) {
+
+
+
+    public void syncSummaryInfluxDBList(List<InfluxDBInfo> influxDBInfoList) {
         Map<Long, InfluxDBInfo> summaryInfluxDBInfoList = influxDBMapper.getInfluxDBInfoMap();
         List<InfluxDBInfo> newList = new ArrayList<>();
         List<Long> delList = new ArrayList<>();
@@ -82,6 +64,8 @@ public class InfluxDBService {
         if( !delList.isEmpty() ) influxDBMapper.deleteInfluxDBInfoList(delList);
     }
 
+
+
     public ResBody<List<MeasurementFieldInfo>> getFields() {
         MiningDBInfo miningDBInfo = miningDBMapper.getDetail();
 
@@ -90,15 +74,17 @@ public class InfluxDBService {
         }
 
         InfluxDBInfo influxDBInfo = InfluxDBInfo.builder()
-                .url(miningDBInfo.getUrl())
-                .database(miningDBInfo.getDatabase())
-                .retentionPolicy(miningDBInfo.getRetentionPolicy())
-                .username(miningDBInfo.getUsername())
-                .password(miningDBInfo.getPassword())
-                .build();
+            .url(miningDBInfo.getUrl())
+            .database(miningDBInfo.getDatabase())
+            .retentionPolicy(miningDBInfo.getRetentionPolicy())
+            .username(miningDBInfo.getUsername())
+            .password(miningDBInfo.getPassword())
+            .build();
 
         return getFields(influxDBInfo);
     }
+
+
 
     public ResBody<List<MeasurementFieldInfo>> getFields(InfluxDBInfo influxDBInfo) {
         if( influxDBInfo == null ) {
@@ -213,102 +199,261 @@ public class InfluxDBService {
         return result;
     }
 
-    private void writeCPU(TumblebugMCI.Vm vm, InfluxDBConnector influxDBConnector, String timeBeforeHour, String intervalMinute) {
-        SpiderMonitoringInfo.Data data = spiderClient.getVMMonitoring(vm.getCspResourceName(), CPU_USAGE.toString(), vm.getConnectionName(), timeBeforeHour, intervalMinute);
 
-        for (SpiderMonitoringInfo.Data.TimestampValue timestampValue : data.getTimestampValues()) {
-            String timestampString = timestampValue.getTimestamp();
-            String valueString = timestampValue.getValue();
+    private void writeCPU(InfluxDBConnector influxDBConnector, List<SpiderMonitoringInfo.Data.TimestampValue> timestampValues) {
+        for (SpiderMonitoringInfo.Data.TimestampValue timestampValue : timestampValues) {
+            try {
+                long timestamp = Instant.parse(timestampValue.getTimestamp())
+                    .getEpochSecond(); // TimeUnit 생략 가능
+                double value = Double.parseDouble(timestampValue.getValue());
 
-            long timestamp = TimeUnit.MILLISECONDS.toSeconds(
-                    Instant.parse(timestampString).toEpochMilli()
-            );
-            double value = Double.parseDouble(valueString);
-
-            Point point = Point.measurement("cpu")
+                Point point = Point.measurement("cpu")
                     .time(timestamp, TimeUnit.SECONDS)
                     .addField("cpu", "cpu-total")
                     .addField("usage", value)
                     .build();
-            influxDBConnector.getInfluxDB().write(point);
-            influxDBConnector.getInfluxDB().close();
-        }
-    }
 
-    private void writeDiskIO(TumblebugMCI.Vm vm, InfluxDBConnector influxDBConnector, String timeBeforeHour, String intervalMinute) {
-        SpiderMonitoringInfo.Data dataReadBytes = spiderClient.getVMMonitoring(vm.getCspResourceName(), DISK_READ.toString(), vm.getConnectionName(), timeBeforeHour, intervalMinute);
-        SpiderMonitoringInfo.Data dataWriteBytes = spiderClient.getVMMonitoring(vm.getCspResourceName(), DISK_WRITE.toString(), vm.getConnectionName(), timeBeforeHour, intervalMinute);
-
-        for (SpiderMonitoringInfo.Data.TimestampValue timestampValueReadBytes : dataReadBytes.getTimestampValues()) {
-            for (SpiderMonitoringInfo.Data.TimestampValue timestampValueWriteBytes : dataWriteBytes.getTimestampValues()) {
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-
-                Instant instantWriteBytes = Instant.parse(timestampValueReadBytes.getTimestamp());
-                ZonedDateTime dateTimeWriteBytes = instantWriteBytes.atZone(ZoneId.of("UTC"));
-                String formattedDateWriteBytes = dateTimeWriteBytes.format(formatter);
-
-                Instant instantReadBytes = Instant.parse(timestampValueReadBytes.getTimestamp());
-                ZonedDateTime dateTimeReadBytes = instantReadBytes.atZone(ZoneId.of("UTC"));
-                String formattedDateReadBytes = dateTimeReadBytes.format(formatter);
-
-                if (formattedDateWriteBytes.equals(formattedDateReadBytes)) {
-                    String timestampString = timestampValueReadBytes.getTimestamp();
-                    String readBytesValueString = timestampValueReadBytes.getValue();
-                    String writeBytesValueString = timestampValueWriteBytes.getValue();
-
-                    long timestamp = TimeUnit.MILLISECONDS.toSeconds(
-                            Instant.parse(timestampString).toEpochMilli()
-                    );
-                    double readBytesValue = Double.parseDouble(readBytesValueString);
-                    double writeBytesValue = Double.parseDouble(writeBytesValueString);
-
-                    Point point = Point.measurement("disk")
-                            .time(timestamp, TimeUnit.SECONDS)
-                            .addField("read_bytes", readBytesValue)
-                            .addField("write_bytes", writeBytesValue)
-                            .build();
-                    influxDBConnector.getInfluxDB().write(point);
-
-                    break;
-                }
+                influxDBConnector.getInfluxDB().write(point);
+            } catch (Exception e) {
+                log.warn("Failed to write CPU metric: {}", e.getMessage());
             }
         }
+
         influxDBConnector.getInfluxDB().close();
     }
 
-    private void writeMem(TumblebugMCI.Vm vm, InfluxDBConnector influxDBConnector, String timeBeforeHour, String intervalMinute) {
-        SpiderMonitoringInfo.Data data = spiderClient.getVMMonitoring(vm.getCspResourceName(), MEMORY_USAGE.toString(), vm.getConnectionName(), timeBeforeHour, intervalMinute);
 
-        for (SpiderMonitoringInfo.Data.TimestampValue timestampValue : data.getTimestampValues()) {
-            String timestampString = timestampValue.getTimestamp();
-            String valueString = timestampValue.getValue();
 
-            long timestamp = TimeUnit.MILLISECONDS.toSeconds(
+
+    public void writeMem(TumblebugMCI.Vm vm,
+        InfluxDBConnector influxDBConnector,
+        SpiderMonitoringInfo.Data memData) {
+
+        if (memData == null || memData.getTimestampValues() == null) return;
+
+        for (SpiderMonitoringInfo.Data.TimestampValue timestampValue : memData.getTimestampValues()) {
+            try {
+                String timestampString = timestampValue.getTimestamp();
+                String valueString = timestampValue.getValue();
+
+                long timestamp = TimeUnit.MILLISECONDS.toSeconds(
                     Instant.parse(timestampString).toEpochMilli()
-            );
-            double value = Double.parseDouble(valueString);
+                );
+                double value = Double.parseDouble(valueString);
 
-            Point point = Point.measurement("mem")
+                Point point = Point.measurement("mem")
                     .time(timestamp, TimeUnit.SECONDS)
                     .addField("used_percent", value)
                     .build();
-            influxDBConnector.getInfluxDB().write(point);
-            influxDBConnector.getInfluxDB().close();
+
+                influxDBConnector.getInfluxDB().write(point);
+
+            } catch (Exception e) {
+                log.warn("Failed to write memory metric: {}", e.getMessage());
+            }
         }
+
+        influxDBConnector.getInfluxDB().close();
     }
 
-    public void writeMetrics(TumblebugMCI.Vm vm, InfluxDBInfo influxDBInfo, String pluginName, String timeBeforeHour, String intervalMinute) {
+
+
+
+    public void writeDiskIO(TumblebugMCI.Vm vm,
+        InfluxDBConnector influxDBConnector,
+        SpiderMonitoringInfo.Data dataReadBytes,
+        SpiderMonitoringInfo.Data dataWriteBytes) {
+
+        if (dataReadBytes == null || dataWriteBytes == null) return;
+        if (dataReadBytes.getTimestampValues() == null || dataWriteBytes.getTimestampValues() == null) return;
+
+        for (SpiderMonitoringInfo.Data.TimestampValue readValue : dataReadBytes.getTimestampValues()) {
+            for (SpiderMonitoringInfo.Data.TimestampValue writeValue : dataWriteBytes.getTimestampValues()) {
+
+                String readTimestamp = readValue.getTimestamp();
+                String writeTimestamp = writeValue.getTimestamp();
+
+                // timestamp 비교 (UTC 기준 yyyy-MM-dd HH:mm)
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+                String formattedRead = Instant.parse(readTimestamp).atZone(ZoneId.of("UTC")).format(formatter);
+                String formattedWrite = Instant.parse(writeTimestamp).atZone(ZoneId.of("UTC")).format(formatter);
+
+                if (!formattedRead.equals(formattedWrite)) continue;
+
+                try {
+                    long timestamp = TimeUnit.MILLISECONDS.toSeconds(Instant.parse(readTimestamp).toEpochMilli());
+                    double readBytes = Double.parseDouble(readValue.getValue());
+                    double writeBytes = Double.parseDouble(writeValue.getValue());
+
+                    Point point = Point.measurement("disk")
+                        .time(timestamp, TimeUnit.SECONDS)
+                        .addField("read_bytes", readBytes)
+                        .addField("write_bytes", writeBytes)
+                        .build();
+
+                    influxDBConnector.getInfluxDB().write(point);
+
+                } catch (Exception e) {
+                    log.warn("Failed to write diskIO point: {}", e.getMessage());
+                }
+
+                break; // 매칭된 한 쌍만 write
+            }
+        }
+
+        influxDBConnector.getInfluxDB().close();
+    }
+
+    public void writeMetrics(TumblebugMCI.Vm vm,
+        InfluxDBInfo influxDBInfo,
+        String pluginName,
+        SpiderMonitoringInfo.Data cpuData,
+        SpiderMonitoringInfo.Data diskReadData,
+        SpiderMonitoringInfo.Data diskWriteData,
+        SpiderMonitoringInfo.Data memData) {
+
         if (influxDBInfo == null) {
             throw new ResultCodeException(ResultCode.INVALID_REQUEST, "influxDB info is null ");
         }
 
         InfluxDBConnector influxDBConnector = new InfluxDBConnector(influxDBInfo);
 
-
         switch (pluginName) {
-            case "cpu" -> writeCPU(vm, influxDBConnector, timeBeforeHour, intervalMinute);
-            case "diskio" -> writeDiskIO(vm, influxDBConnector, timeBeforeHour, intervalMinute);
-            case "mem" -> writeMem(vm, influxDBConnector, timeBeforeHour, intervalMinute);
+            case "cpu" -> writeCPU(vm, influxDBConnector, cpuData);
+            case "diskio" -> writeDiskIO(vm, influxDBConnector, diskReadData, diskWriteData);
+            case "mem" -> writeMem(vm, influxDBConnector, memData);
         }
     }
+
+
+
+    //    public ResBody<List<InfluxDBInfo>> getList() {
+//        List<MonitoringConfigInfo> storageInfoList = monitoringConfigService.list(null, null, null);
+//        storageInfoList = storageInfoList.stream().filter(f -> f.getPluginName().equalsIgnoreCase("influxdb")).toList();
+//
+//        List<InfluxDBInfo> influxDBInfoList = new ArrayList<>();
+//        for (MonitoringConfigInfo hostStorageInfo : storageInfoList) {
+//            InfluxDBConnector con = new InfluxDBConnector(hostStorageInfo.getPluginConfig());
+//            InfluxDBInfo influxDBinfo = InfluxDBInfo.builder()
+//                    .url(con.getUrl())
+//                    .database(con.getDatabase())
+//                    .retentionPolicy(con.getRetentionPolicy())
+//                    .username(con.getUsername())
+//                    .password(con.getPassword())
+//                    .build();
+//
+//            influxDBInfoList.add(influxDBinfo);
+//        }
+//
+//        syncSummaryInfluxDBList(influxDBInfoList.stream().distinct().collect(Collectors.toList()));
+//
+//        ResBody<List<InfluxDBInfo>> res = new ResBody<>();
+//        res.setData(influxDBMapper.getInfluxDBInfoList());
+//
+//        return res;
+//    }
+
+
+
+//    private void writeMem(TumblebugMCI.Vm vm, InfluxDBConnector influxDBConnector, String timeBeforeHour, String intervalMinute) {
+//        SpiderMonitoringInfo.Data data = spiderClient.getVMMonitoring(vm.getCspResourceName(), MEMORY_USAGE.toString(), vm.getConnectionName(), timeBeforeHour, intervalMinute);
+//
+//        for (SpiderMonitoringInfo.Data.TimestampValue timestampValue : data.getTimestampValues()) {
+//            String timestampString = timestampValue.getTimestamp();
+//            String valueString = timestampValue.getValue();
+//
+//            long timestamp = TimeUnit.MILLISECONDS.toSeconds(
+//                Instant.parse(timestampString).toEpochMilli()
+//            );
+//            double value = Double.parseDouble(valueString);
+//
+//            Point point = Point.measurement("mem")
+//                .time(timestamp, TimeUnit.SECONDS)
+//                .addField("used_percent", value)
+//                .build();
+//            influxDBConnector.getInfluxDB().write(point);
+//            influxDBConnector.getInfluxDB().close();
+//        }
+//    }
+
+
+//    private void writeCPU(TumblebugMCI.Vm vm, InfluxDBConnector influxDBConnector, String timeBeforeHour, String intervalMinute) {
+//        SpiderMonitoringInfo.Data data = spiderClient.getVMMonitoring(vm.getCspResourceName(), CPU_USAGE.toString(), vm.getConnectionName(), timeBeforeHour, intervalMinute);
+//
+//        for (SpiderMonitoringInfo.Data.TimestampValue timestampValue : data.getTimestampValues()) {
+//            String timestampString = timestampValue.getTimestamp();
+//            String valueString = timestampValue.getValue();
+//
+//            long timestamp = TimeUnit.MILLISECONDS.toSeconds(
+//                    Instant.parse(timestampString).toEpochMilli()
+//            );
+//            double value = Double.parseDouble(valueString);
+//
+//            Point point = Point.measurement("cpu")
+//                    .time(timestamp, TimeUnit.SECONDS)
+//                    .addField("cpu", "cpu-total")
+//                    .addField("usage", value)
+//                    .build();
+//            influxDBConnector.getInfluxDB().write(point);
+//            influxDBConnector.getInfluxDB().close();
+//        }
+//    }
+
+//    private void writeDiskIO(TumblebugMCI.Vm vm, InfluxDBConnector influxDBConnector, String timeBeforeHour, String intervalMinute) {
+//        SpiderMonitoringInfo.Data dataReadBytes = spiderClient.getVMMonitoring(vm.getCspResourceName(), DISK_READ.toString(), vm.getConnectionName(), timeBeforeHour, intervalMinute);
+//        SpiderMonitoringInfo.Data dataWriteBytes = spiderClient.getVMMonitoring(vm.getCspResourceName(), DISK_WRITE.toString(), vm.getConnectionName(), timeBeforeHour, intervalMinute);
+//
+//        for (SpiderMonitoringInfo.Data.TimestampValue timestampValueReadBytes : dataReadBytes.getTimestampValues()) {
+//            for (SpiderMonitoringInfo.Data.TimestampValue timestampValueWriteBytes : dataWriteBytes.getTimestampValues()) {
+//                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+//
+//                Instant instantWriteBytes = Instant.parse(timestampValueReadBytes.getTimestamp());
+//                ZonedDateTime dateTimeWriteBytes = instantWriteBytes.atZone(ZoneId.of("UTC"));
+//                String formattedDateWriteBytes = dateTimeWriteBytes.format(formatter);
+//
+//                Instant instantReadBytes = Instant.parse(timestampValueReadBytes.getTimestamp());
+//                ZonedDateTime dateTimeReadBytes = instantReadBytes.atZone(ZoneId.of("UTC"));
+//                String formattedDateReadBytes = dateTimeReadBytes.format(formatter);
+//
+//                if (formattedDateWriteBytes.equals(formattedDateReadBytes)) {
+//                    String timestampString = timestampValueReadBytes.getTimestamp();
+//                    String readBytesValueString = timestampValueReadBytes.getValue();
+//                    String writeBytesValueString = timestampValueWriteBytes.getValue();
+//
+//                    long timestamp = TimeUnit.MILLISECONDS.toSeconds(
+//                            Instant.parse(timestampString).toEpochMilli()
+//                    );
+//                    double readBytesValue = Double.parseDouble(readBytesValueString);
+//                    double writeBytesValue = Double.parseDouble(writeBytesValueString);
+//
+//                    Point point = Point.measurement("disk")
+//                            .time(timestamp, TimeUnit.SECONDS)
+//                            .addField("read_bytes", readBytesValue)
+//                            .addField("write_bytes", writeBytesValue)
+//                            .build();
+//                    influxDBConnector.getInfluxDB().write(point);
+//
+//                    break;
+//                }
+//            }
+//        }
+//        influxDBConnector.getInfluxDB().close();
+//    }
+
+
+
+//    public void writeMetrics(TumblebugMCI.Vm vm, InfluxDBInfo influxDBInfo, String pluginName, String timeBeforeHour, String intervalMinute) {
+//        if (influxDBInfo == null) {
+//            throw new ResultCodeException(ResultCode.INVALID_REQUEST, "influxDB info is null ");
+//        }
+//
+//        InfluxDBConnector influxDBConnector = new InfluxDBConnector(influxDBInfo);
+//
+//
+//        switch (pluginName) {
+//            case "cpu" -> writeCPU(vm, influxDBConnector, timeBeforeHour, intervalMinute);
+//            case "diskio" -> writeDiskIO(vm, influxDBConnector, timeBeforeHour, intervalMinute);
+//            case "mem" -> writeMem(vm, influxDBConnector, timeBeforeHour, intervalMinute);
+//        }
+//    }
 }

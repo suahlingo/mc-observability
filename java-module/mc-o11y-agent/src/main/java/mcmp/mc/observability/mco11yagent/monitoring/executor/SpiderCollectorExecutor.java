@@ -1,4 +1,4 @@
-package mcmp.mc.observability.mco11yagent.monitoring.util;
+package mcmp.mc.observability.mco11yagent.monitoring.executor;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

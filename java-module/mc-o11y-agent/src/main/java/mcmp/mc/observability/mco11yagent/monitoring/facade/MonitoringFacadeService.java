@@ -19,18 +19,21 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class MonitoringFacadeService {
+
     private final TumblebugClient tumblebugClient;
     private final InfluxDBServiceImpl influxDBService;
     private final PluginMapper pluginMapper;
     private final SpiderClient spiderClient;
 
-    public SpiderMonitoringInfo.Data getSpiderVMMonitoring(String nsId, String mciId, String targetId, String measurement,
-                                                           String timeBeforeHour, String intervalMinute) {
+    public SpiderMonitoringInfo.Data getSpiderVMMonitoring(String nsId, String mciId,
+        String targetId, String measurement,
+        String timeBeforeHour, String intervalMinute) {
         TumblebugMCI.Vm vm = tumblebugClient.getVM(nsId, mciId, targetId);
 
         SpiderMonitoringInfo.Data data = null;
         try {
-            data = spiderClient.getVMMonitoring(vm.getCspResourceName(), measurement, vm.getConnectionName(), timeBeforeHour, intervalMinute);
+            data = spiderClient.getVMMonitoring(vm.getCspResourceName(), measurement,
+                vm.getConnectionName(), timeBeforeHour, intervalMinute);
         } catch (Exception e) {
             log.error(ExceptionUtils.getMessage(e));
         }
@@ -38,18 +41,18 @@ public class MonitoringFacadeService {
         return data;
     }
 
-    public void writeSpiderVMMonitoring(InfluxDBInfo influxDBinfo, String nsId, String mciId, String targetId, String timeBeforeHour, String intervalMinute) {
+    public void writeSpiderVMMonitoring(InfluxDBInfo influxDBInfo, String nsId, String mciId, String targetId,
+        SpiderMonitoringInfo.Data cpuData,
+        SpiderMonitoringInfo.Data diskReadData,
+        SpiderMonitoringInfo.Data diskWriteData,
+        SpiderMonitoringInfo.Data memData) {
+
         TumblebugMCI.Vm vm = tumblebugClient.getVM(nsId, mciId, targetId);
+        List<PluginDefInfo> pluginList = pluginMapper.getList();
 
-        try {
-            List<PluginDefInfo> pluginList = pluginMapper.getList();
-
-            for (PluginDefInfo plugin : pluginList) {
-                influxDBService.writeMetrics(vm, influxDBinfo, plugin.getName(), timeBeforeHour,intervalMinute);
-            }
-
-        } catch (Exception e) {
-            log.error(ExceptionUtils.getMessage(e));
+        for (PluginDefInfo plugin : pluginList) {
+            influxDBService.writeMetrics(vm, influxDBInfo, plugin.getName(), cpuData, diskReadData, diskWriteData, memData);
         }
     }
+
 }

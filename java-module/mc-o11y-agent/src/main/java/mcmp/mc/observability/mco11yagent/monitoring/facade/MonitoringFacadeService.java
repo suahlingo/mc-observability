@@ -1,4 +1,4 @@
-package mcmp.mc.observability.mco11yagent.monitoring.service;
+package mcmp.mc.observability.mco11yagent.monitoring.facade;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +9,7 @@ import mcmp.mc.observability.mco11yagent.monitoring.client.SpiderClient;
 import mcmp.mc.observability.mco11yagent.monitoring.client.TumblebugClient;
 import mcmp.mc.observability.mco11yagent.monitoring.model.SpiderMonitoringInfo;
 import mcmp.mc.observability.mco11yagent.monitoring.model.TumblebugMCI;
+import mcmp.mc.observability.mco11yagent.monitoring.service.InfluxDBServiceImpl;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +18,7 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class MonitoringService {
+public class MonitoringFacadeService {
     private final TumblebugClient tumblebugClient;
     private final InfluxDBServiceImpl influxDBService;
     private final PluginMapper pluginMapper;

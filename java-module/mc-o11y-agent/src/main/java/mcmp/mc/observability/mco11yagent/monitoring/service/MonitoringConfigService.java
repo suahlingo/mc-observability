@@ -8,7 +8,6 @@ import mcmp.mc.observability.mco11yagent.monitoring.mapper.PluginMapper;
 import mcmp.mc.observability.mco11yagent.monitoring.model.MonitoringConfigInfo;
 import mcmp.mc.observability.mco11yagent.monitoring.model.PluginDefInfo;
 import mcmp.mc.observability.mco11yagent.monitoring.model.dto.ResBody;
-import mcmp.mc.observability.mco11yagent.trigger.service.TriggerTaskManageService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,7 +17,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MonitoringConfigService {
     private final MonitoringConfigMapper monitoringConfigMapper;
-    private final TriggerTaskManageService triggerTaskManageService;
     private final PluginMapper pluginMapper;
 
     public List<MonitoringConfigInfo> list(String nsId, String mciId, String targetId) {
@@ -52,9 +50,6 @@ public class MonitoringConfigService {
         monitoringConfigInfo.setState("UPDATE");
         monitoringConfigMapper.update(monitoringConfigInfo);
 
-        if("influxdb".equals(monitoringConfigInfo.getPluginName())) {
-            triggerTaskManageService.updateStorage(originalConfig, monitoringConfigInfo);
-        }
         return new ResBody<>(ResultCode.SUCCESS);
     }
 
@@ -63,9 +58,6 @@ public class MonitoringConfigService {
         monitoringConfigInfo.setState("DELETE");
         monitoringConfigMapper.update(monitoringConfigInfo);
 
-        if("influxdb".equals(monitoringConfigInfo.getPluginName())) {
-            triggerTaskManageService.deleteStorage(monitoringConfigInfo);
-        }
         return new ResBody<>(ResultCode.SUCCESS);
     }
 

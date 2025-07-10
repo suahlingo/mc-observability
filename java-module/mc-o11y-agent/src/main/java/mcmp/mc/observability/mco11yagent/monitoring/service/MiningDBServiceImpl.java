@@ -8,13 +8,14 @@ import mcmp.mc.observability.mco11yagent.monitoring.mapper.MiningDBMapper;
 import mcmp.mc.observability.mco11yagent.monitoring.model.MiningDBInfo;
 import mcmp.mc.observability.mco11yagent.monitoring.model.dto.MiningDBSetDTO;
 import mcmp.mc.observability.mco11yagent.monitoring.model.dto.ResBody;
+import mcmp.mc.observability.mco11yagent.monitoring.service.Interface.MiningDBService;
 import org.apache.ibatis.exceptions.TooManyResultsException;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class MiningDBService {
+public class MiningDBServiceImpl implements MiningDBService {
 
     private final MiningDBMapper miningDBMapper;
 

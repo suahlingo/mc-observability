@@ -6,7 +6,7 @@ import mcmp.mc.observability.mco11yagent.monitoring.common.Constants;
 import mcmp.mc.observability.mco11yagent.monitoring.enums.ResultCode;
 import mcmp.mc.observability.mco11yagent.monitoring.model.*;
 import mcmp.mc.observability.mco11yagent.monitoring.model.dto.ResBody;
-import mcmp.mc.observability.mco11yagent.monitoring.service.MonitoringService;
+import mcmp.mc.observability.mco11yagent.monitoring.facade.MonitoringFacadeService;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(Constants.MONITORING_URI + "/{nsId}/{mciId}/target/{targetId}/csp")
 public class CSPController {
 
-    private final MonitoringService monitoringService;
+    private final MonitoringFacadeService monitoringService;
 
     @Base64Encode
     @GetMapping("/{measurement}")

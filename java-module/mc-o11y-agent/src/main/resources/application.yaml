@@ -74,6 +74,9 @@ feign:
       influxdb_retention_policy: ${SPIDER_MONITORING_INFLUXDB_RETENTION_POLICY:autogen}
       influxdb_username: ${SPIDER_MONITORING_INFLUXDB_USERNAME:mc-agent}
       influxdb_password: ${SPIDER_MONITORING_INFLUXDB_PASSWORD:mc-agent}
+  insight:
+    url: ${INSIGHT_URL:http://mc-o11y-insight:9001}
+
 
 display_information:
   name: M-CMP Trigger

@@ -42,8 +42,5 @@ subprojects {
     }
 }
 
-project(':mc-o11y-manager') {
-}
-
 project(':mc-o11y-agent') {
 }

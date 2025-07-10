@@ -2,8 +2,7 @@ package mcmp.mc.observability.mco11yagent.monitoring.scheduler;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import mcmp.mc.observability.mco11yagent.monitoring.util.CollectorExecutor;
-import mcmp.mc.observability.mco11yagent.monitoring.util.SpiderCollectorExecutor;
+import mcmp.mc.observability.mco11yagent.monitoring.executor.SpiderCollectorExecutor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 

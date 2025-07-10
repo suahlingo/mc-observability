@@ -1,8 +1,7 @@
-package mcmp.mc.observability.mco11yagent.monitoring.config;
+package mcmp.mc.observability.mco11yagent.monitoring.exception;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import mcmp.mc.observability.mco11yagent.monitoring.exception.ResultCodeException;
 import mcmp.mc.observability.mco11yagent.monitoring.model.dto.ResBody;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.web.bind.annotation.ExceptionHandler;

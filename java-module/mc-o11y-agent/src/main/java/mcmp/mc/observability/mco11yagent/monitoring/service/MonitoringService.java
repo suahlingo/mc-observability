@@ -19,7 +19,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MonitoringService {
     private final TumblebugClient tumblebugClient;
-    private final InfluxDBService influxDBService;
+    private final InfluxDBServiceImpl influxDBService;
     private final PluginMapper pluginMapper;
     private final SpiderClient spiderClient;
 

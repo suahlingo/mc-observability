@@ -10,7 +10,7 @@ import mcmp.mc.observability.mco11yagent.monitoring.model.MetricsInfo;
 import mcmp.mc.observability.mco11yagent.monitoring.model.MiningDBInfo;
 import mcmp.mc.observability.mco11yagent.monitoring.model.dto.MiningDBSetDTO;
 import mcmp.mc.observability.mco11yagent.monitoring.model.dto.ResBody;
-import mcmp.mc.observability.mco11yagent.monitoring.service.InfluxDBService;
+import mcmp.mc.observability.mco11yagent.monitoring.service.InfluxDBServiceImpl;
 import mcmp.mc.observability.mco11yagent.monitoring.service.MiningDBService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,7 +28,7 @@ import java.util.List;
 public class MiningDBController {
 
     private final MiningDBService miningDBService;
-    private final InfluxDBService influxDBService;
+    private final InfluxDBServiceImpl influxDBService;
 
     @GetMapping
     public ResBody<MiningDBInfo> detail() {

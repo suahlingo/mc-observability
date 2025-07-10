@@ -8,8 +8,8 @@ import mcmp.mc.observability.mco11yagent.monitoring.mapper.InfluxDBMapper;
 import mcmp.mc.observability.mco11yagent.monitoring.mapper.MiningDBMapper;
 import mcmp.mc.observability.mco11yagent.monitoring.model.*;
 import mcmp.mc.observability.mco11yagent.monitoring.model.dto.ResBody;
+import mcmp.mc.observability.mco11yagent.monitoring.service.Interface.InfluxDBService;
 import mcmp.mc.observability.mco11yagent.monitoring.util.InfluxDBUtils;
-import org.influxdb.InfluxDB;
 import org.influxdb.dto.BoundParameterQuery;
 import org.influxdb.dto.Point;
 import org.influxdb.dto.QueryResult;
@@ -26,24 +26,24 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class InfluxDBService {
+public class InfluxDBServiceImpl implements InfluxDBService {
 
     private final InfluxDBMapper influxDBMapper;
     private final MiningDBMapper miningDBMapper;
 
 
+    @Override
     public ResBody<List<InfluxDBInfo>> getList() {
         List<InfluxDBInfo> influxDBInfoList = influxDBMapper.getInfluxDBInfoList();
 
         ResBody<List<InfluxDBInfo>> res = new ResBody<>();
-        res.setData(influxDBMapper.getInfluxDBInfoList());
+        res.setData(influxDBInfoList);
 
         return res;
     }
 
 
-
-
+    @Override
     public void syncSummaryInfluxDBList(List<InfluxDBInfo> influxDBInfoList) {
         Map<Long, InfluxDBInfo> summaryInfluxDBInfoList = influxDBMapper.getInfluxDBInfoMap();
         List<InfluxDBInfo> newList = new ArrayList<>();
@@ -65,7 +65,7 @@ public class InfluxDBService {
     }
 
 
-
+    @Override
     public ResBody<List<MeasurementFieldInfo>> getFields() {
         MiningDBInfo miningDBInfo = miningDBMapper.getDetail();
 
@@ -85,7 +85,7 @@ public class InfluxDBService {
     }
 
 
-
+    @Override
     public ResBody<List<MeasurementFieldInfo>> getFields(InfluxDBInfo influxDBInfo) {
         if( influxDBInfo == null ) {
             throw new ResultCodeException(ResultCode.INVALID_REQUEST, "Can't find configured InfluxDB. InfluxDBInfo is null");
@@ -104,6 +104,7 @@ public class InfluxDBService {
         return res;
     }
 
+    @Override
     public ResBody<List<MeasurementTagInfo>> getTags() {
         MiningDBInfo miningDBInfo = miningDBMapper.getDetail();
 
@@ -122,6 +123,7 @@ public class InfluxDBService {
         return getTags(influxDBInfo);
     }
 
+    @Override
     public ResBody<List<MeasurementTagInfo>> getTags(InfluxDBInfo influxDBInfo) {
         if( influxDBInfo == null ) {
             throw new ResultCodeException(ResultCode.INVALID_REQUEST, "Can't find configured InfluxDB. InfluxDBInfo is null");
@@ -155,6 +157,7 @@ public class InfluxDBService {
         return res;
     }
 
+    @Override
     public List<MetricInfo> getMetrics(MetricsInfo metricsInfo) {
         MiningDBInfo miningDBInfo = miningDBMapper.getDetail();
 
@@ -173,6 +176,7 @@ public class InfluxDBService {
         return getMetrics(influxDBInfo, metricsInfo);
     }
 
+    @Override
     public List<MetricInfo> getMetrics(InfluxDBInfo influxDBInfo, MetricsInfo metricsInfo) {
         if( influxDBInfo == null ) {
             throw new ResultCodeException(ResultCode.INVALID_REQUEST, "Can't find configured InfluxDB. InfluxDBInfo is null");
@@ -200,7 +204,8 @@ public class InfluxDBService {
     }
 
 
-    private void writeCPU(InfluxDBConnector influxDBConnector, List<SpiderMonitoringInfo.Data.TimestampValue> timestampValues) {
+    @Override
+    public void writeCPU(InfluxDBConnector influxDBConnector, List<SpiderMonitoringInfo.Data.TimestampValue> timestampValues) {
         for (SpiderMonitoringInfo.Data.TimestampValue timestampValue : timestampValues) {
             try {
                 long timestamp = Instant.parse(timestampValue.getTimestamp())
@@ -225,6 +230,7 @@ public class InfluxDBService {
 
 
 
+    @Override
     public void writeMem(TumblebugMCI.Vm vm,
         InfluxDBConnector influxDBConnector,
         SpiderMonitoringInfo.Data memData) {
@@ -258,7 +264,7 @@ public class InfluxDBService {
 
 
 
-
+    @Override
     public void writeDiskIO(TumblebugMCI.Vm vm,
         InfluxDBConnector influxDBConnector,
         SpiderMonitoringInfo.Data dataReadBytes,
@@ -304,6 +310,8 @@ public class InfluxDBService {
         influxDBConnector.getInfluxDB().close();
     }
 
+
+    @Override
     public void writeMetrics(TumblebugMCI.Vm vm,
         InfluxDBInfo influxDBInfo,
         String pluginName,
@@ -318,12 +326,14 @@ public class InfluxDBService {
 
         InfluxDBConnector influxDBConnector = new InfluxDBConnector(influxDBInfo);
 
-        switch (pluginName) {
-            case "cpu" -> writeCPU(vm, influxDBConnector, cpuData);
+        switch (pluginName.toLowerCase()) {
+            case "cpu" -> writeCPU(influxDBConnector, cpuData.getTimestampValues());
             case "diskio" -> writeDiskIO(vm, influxDBConnector, diskReadData, diskWriteData);
             case "mem" -> writeMem(vm, influxDBConnector, memData);
+            default -> log.warn("Unsupported plugin name: {}", pluginName);
         }
     }
+
 
 
 

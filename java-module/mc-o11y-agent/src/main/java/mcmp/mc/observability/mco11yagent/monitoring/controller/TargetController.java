@@ -4,10 +4,11 @@ import lombok.RequiredArgsConstructor;
 import mcmp.mc.observability.mco11yagent.monitoring.annotation.Base64Decode;
 import mcmp.mc.observability.mco11yagent.monitoring.annotation.Base64Encode;
 import mcmp.mc.observability.mco11yagent.monitoring.common.Constants;
+import mcmp.mc.observability.mco11yagent.monitoring.facade.TargetFacadeService;
 import mcmp.mc.observability.mco11yagent.monitoring.model.TargetInfo;
 import mcmp.mc.observability.mco11yagent.monitoring.model.dto.ResBody;
 import mcmp.mc.observability.mco11yagent.monitoring.model.dto.TargetInfoCreateUpdateDTO;
-import mcmp.mc.observability.mco11yagent.monitoring.service.TargetService;
+import mcmp.mc.observability.mco11yagent.monitoring.service.TargetServiceImpl;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,24 +25,24 @@ import java.util.List;
 @RequestMapping(Constants.MONITORING_URI)
 public class TargetController {
 
-    private final TargetService targetService;
+    private final TargetFacadeService targetFacadeService;
 
     @Base64Encode
     @GetMapping("/target")
     public ResBody<List<TargetInfo>> list() {
-        return targetService.getList();
+        return targetFacadeService.getAllTargetList();
     }
 
     @Base64Encode
     @GetMapping("/{nsId}/{mciId}/target")
     public ResBody<List<TargetInfo>> list(@PathVariable String nsId, @PathVariable String mciId) {
-        return targetService.getList(nsId, mciId);
+        return targetFacadeService.getByNsAndMciList(nsId, mciId);
     }
 
     @Base64Encode
     @GetMapping("/{nsId}/{mciId}/target/{targetId}")
     public ResBody<TargetInfo> getTarget(@PathVariable String nsId, @PathVariable String mciId, @PathVariable String targetId) {
-        return targetService.getTarget(nsId, mciId, targetId);
+        return targetFacadeService.fetchTarget(nsId, mciId, targetId);
     }
 
     @Base64Decode(TargetInfo.class)
@@ -52,7 +53,7 @@ public class TargetController {
         targetInfo.setAliasName(targetCreateInfo.getAliasName());
         targetInfo.setDescription(targetCreateInfo.getDescription());
 
-        return targetService.insert(nsId, mciId, targetId, targetInfo);
+        return targetFacadeService.insertTarget(nsId, mciId, targetId, targetInfo);
     }
 
     @Base64Decode(TargetInfo.class)
@@ -63,11 +64,11 @@ public class TargetController {
         targetInfo.setAliasName(targetUpdateInfo.getAliasName());
         targetInfo.setDescription(targetUpdateInfo.getDescription());
 
-        return targetService.update(nsId, mciId, targetId, targetInfo);
+        return targetFacadeService.updateTarget(nsId, mciId, targetId, targetInfo);
     }
 
     @DeleteMapping("/{nsId}/{mciId}/target/{targetId}")
     public ResBody delete(@PathVariable String nsId, @PathVariable String mciId, @PathVariable String targetId) {
-        return targetService.delete(nsId, mciId, targetId);
+        return targetFacadeService.removeTarget(nsId, mciId, targetId);
     }
 }

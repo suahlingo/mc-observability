@@ -1,8 +1,6 @@
 package mcmp.mc.observability.mco11yagent.monitoring.controller;
 
 import lombok.RequiredArgsConstructor;
-import mcmp.mc.observability.mco11yagent.monitoring.annotation.Base64Decode;
-import mcmp.mc.observability.mco11yagent.monitoring.annotation.Base64Encode;
 import mcmp.mc.observability.mco11yagent.monitoring.common.Constants;
 import mcmp.mc.observability.mco11yagent.monitoring.enums.ResultCode;
 import mcmp.mc.observability.mco11yagent.monitoring.model.MonitoringConfigInfo;
@@ -29,7 +27,7 @@ public class StorageController {
 
     private final MonitoringConfigService monitoringConfigService;
 
-    @Base64Encode
+
     @GetMapping
     public ResBody<List<MonitoringConfigInfo>> list(@PathVariable String nsId, @PathVariable String mciId, @PathVariable String targetId) {
         List<MonitoringConfigInfo> list = monitoringConfigService.list(nsId, mciId, targetId);
@@ -38,7 +36,6 @@ public class StorageController {
         return resBody;
     }
 
-    @Base64Decode(MonitoringConfigInfo.class)
     @PostMapping
     public ResBody insert(@PathVariable String nsId, @PathVariable String mciId, @PathVariable String targetId, @RequestBody MonitoringConfigInfoCreateDTO storageCreateInfo) {
         MonitoringConfigInfo monitoringConfigInfo = new MonitoringConfigInfo();
@@ -49,7 +46,7 @@ public class StorageController {
         return monitoringConfigService.insert(nsId, mciId, targetId, monitoringConfigInfo);
     }
 
-    @Base64Decode(MonitoringConfigInfo.class)
+
     @PutMapping
     public ResBody update(@PathVariable String nsId, @PathVariable String mciId, @PathVariable String targetId, @RequestBody MonitoringConfigInfoUpdateDTO storageUpdateInfo) {
         MonitoringConfigInfo monitoringConfigInfo = new MonitoringConfigInfo();

@@ -7,7 +7,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.Builder;
-import mcmp.mc.observability.mco11yagent.monitoring.annotation.Base64EncodeField;
 import mcmp.mc.observability.mco11yagent.monitoring.enums.ResultCode;
 
 @Setter
@@ -18,7 +17,7 @@ public class ResBody<T> {
     @JsonIgnore
     private ResultCode code;
 
-    @Base64EncodeField
+
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonProperty("data")
     private T data;

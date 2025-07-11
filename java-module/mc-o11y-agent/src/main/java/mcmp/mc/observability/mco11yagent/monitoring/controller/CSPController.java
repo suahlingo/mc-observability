@@ -1,7 +1,6 @@
 package mcmp.mc.observability.mco11yagent.monitoring.controller;
 
 import lombok.RequiredArgsConstructor;
-import mcmp.mc.observability.mco11yagent.monitoring.annotation.Base64Encode;
 import mcmp.mc.observability.mco11yagent.monitoring.common.Constants;
 import mcmp.mc.observability.mco11yagent.monitoring.enums.ResultCode;
 import mcmp.mc.observability.mco11yagent.monitoring.model.*;
@@ -17,7 +16,6 @@ public class CSPController {
 
     private final MonitoringFacadeService monitoringService;
 
-    @Base64Encode
     @GetMapping("/{measurement}")
     public ResBody<SpiderMonitoringInfo.Data> getCSP(@PathVariable String nsId, @PathVariable String mciId, @PathVariable String targetId, @PathVariable String measurement) {
         ResBody<SpiderMonitoringInfo.Data> resBody = new ResBody<>();

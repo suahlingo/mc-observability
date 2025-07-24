@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '2.7.6'
+    id 'org.springframework.boot' version '3.4.1'
 }
 
 bootJar.enabled = false
@@ -8,7 +8,7 @@ bootJar.enabled = false
 allprojects {
     group = 'mcmp.mc.observability'
     version = '0.2.0'
-    sourceCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_21
 
     repositories {
         mavenCentral()
@@ -29,8 +29,17 @@ subprojects {
         }
     }
 
+    dependencyManagement {
+        imports {
+            mavenBom "io.opentelemetry:opentelemetry-bom:1.34.1"
+            mavenBom "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:2.17.0"
+            mavenBom "io.micrometer:micrometer-tracing-bom:1.5.1"
+        }
+    }
+
     repositories {
         mavenCentral()
+//        maven { url 'https://jitpack.io' }
     }
 
     dependencies {

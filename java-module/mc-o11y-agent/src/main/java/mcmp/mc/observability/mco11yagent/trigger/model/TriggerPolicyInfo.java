@@ -2,20 +2,16 @@ package mcmp.mc.observability.mco11yagent.trigger.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import mcmp.mc.observability.mco11yagent.trigger.annotation.TriggerBase64EncodeField;
 import mcmp.mc.observability.mco11yagent.trigger.enums.TaskStatus;
 import mcmp.mc.observability.mco11yagent.trigger.model.dto.TriggerPolicyCreateDto;
 import mcmp.mc.observability.mco11yagent.trigger.model.dto.TriggerPolicyUpdateDto;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
+import java.util.*;
+import java.util.stream.Collectors;
 @Getter
 @Setter
 @Builder
@@ -23,57 +19,56 @@ import java.util.Map;
 @AllArgsConstructor
 public class TriggerPolicyInfo {
 
-    @ApiModelProperty(value = "Sequence by trigger policy", example = "1")
+    @Schema(description = "Sequence by trigger policy", example = "1")
     @JsonProperty("seq")
     private Long seq;
 
-    @ApiModelProperty(value = "Base64 Encoded value", example = "Y3B1IHVzYWdlX2lkbGUgY2hlY2sgcG9saWN5")
+    @Schema(description = "Base64 Encoded value", example = "Y3B1IHVzYWdlX2lkbGUgY2hlY2sgcG9saWN5")
     @TriggerBase64EncodeField
     @JsonProperty("name")
     private String name;
 
-    @ApiModelProperty(value = "Host description", example = "ZGVzY3JpcHRpb24=")
+    @Schema(description = "Host description", example = "ZGVzY3JpcHRpb24=")
     @TriggerBase64EncodeField
     @JsonProperty("description")
     private String description;
 
-    @ApiModelProperty(value = "Trigger target metric", example = "cpu")
+    @Schema(description = "Trigger target metric", example = "cpu")
     @JsonProperty("measurement")
     private String metric;
 
-    @ApiModelProperty(value = "Trigger target metric field", example = "usage_idle")
+    @Schema(description = "Trigger target metric field", example = "usage_idle")
     @JsonProperty("field")
     private String field;
 
-    @ApiModelProperty(value = "Trigger target metric statistics", example = "min")
+    @Schema(description = "Trigger target metric statistics", example = "min")
     @JsonProperty("statistics")
     private String statistics;
 
-	@ApiModelProperty(value = "Base64 Encoded value",  example = "eyJjcml0IjogInZhbHVlID49IDEwMCIsICJ3YXJuIjogInZhbHVlID4gOTkuOSIsICJpbmZvIjogInZhbHVlIDwgOTkuNiJ9")
+    @Schema(description = "Thresholds for CRIT/WARN/INFO", example = "{\"crit\": \"value >= 100\", \"warn\": \"value > 99.9\"}")
     @TriggerBase64EncodeField
     @JsonProperty("threshold")
     private String threshold;
 
-    @ApiModelProperty(value = "Agent Manager IP", hidden = true, example = "http://localhost:18080")
+    @Schema(description = "Agent Manager IP (internal use only)", hidden = true, example = "http://localhost:18080")
     @JsonProperty("agent_manager_ip")
     private String agentManagerIp;
 
-    @ApiModelProperty(value = "Trigger Policy enablement status")
+    @Schema(description = "Trigger Policy enablement status", example = "ENABLED")
     @JsonProperty("status")
     private TaskStatus status;
 
-    @ApiModelProperty(value = "Fields to group the data", hidden = true, example = "[]")
+    @Schema(description = "Group by fields", example = "[\"cpu\"]", hidden = true)
     private List<String> groupFields;
 
     @JsonIgnore
-    @JsonProperty("tick_script")
     private String tickScript;
 
-    @ApiModelProperty(value = "The time when the trigger policy was registered", example = "2024-05-24T11:31:55Z")
+    @Schema(description = "Created at", example = "2024-05-24T11:31:55Z")
     @JsonProperty("create_at")
     private String createAt;
 
-    @ApiModelProperty(value = "The time when the trigger policy was updated", example = "2024-05-24T11:31:55Z")
+    @Schema(description = "Last updated at", example = "2024-05-24T11:31:55Z")
     @JsonProperty("update_at")
     private String updateAt;
 
@@ -89,115 +84,98 @@ public class TriggerPolicyInfo {
     }
 
     public void setUpdateDto(TriggerPolicyUpdateDto dto) {
-        if(dto.getName() != null)
-            this.name = dto.getName();
-        if (dto.getDescription() != null)
-            this.description = dto.getDescription();
-        if (dto.getMetric() != null)
-            this.metric = dto.getMetric();
-        if (dto.getGroupFields() != null)
-            this.groupFields = dto.getGroupFields();
-        if (dto.getThreshold() != null)
-            this.threshold = dto.getThreshold();
-        if (dto.getField() != null)
-            this.field = dto.getField();
-        if (dto.getStatistics() != null)
-            this.statistics = dto.getStatistics();
-        if (dto.getStatus() != null)
-            this.status = dto.getStatus();
+        if (dto.getName() != null) this.name = dto.getName();
+        if (dto.getDescription() != null) this.description = dto.getDescription();
+        if (dto.getMetric() != null) this.metric = dto.getMetric();
+        if (dto.getGroupFields() != null) this.groupFields = dto.getGroupFields();
+        if (dto.getThreshold() != null) this.threshold = dto.getThreshold();
+        if (dto.getField() != null) this.field = dto.getField();
+        if (dto.getStatistics() != null) this.statistics = dto.getStatistics();
+        if (dto.getStatus() != null) this.status = dto.getStatus();
     }
 
-    public void makeTickScript(TriggerPolicyInfo triggerPolicy) {
-        String tickScript =
-                "var db = '@DATABASE'\n" +
-                "var rp = '@RETENTION_POLICY'\n" +
-                "var measurement = '@MEASUREMENT'\n" +
-                "var groupBy = @GROUP_BY\n\n" +
-                "var streamData = stream\n" +
-                "    |from()\n" +
-                "        .database(db)\n" +
-                "        .retentionPolicy(rp)\n" +
-                "        .measurement(measurement)\n" +
-                "        .groupBy(groupBy)\n" +
-                "        .where(lambda: isPresent(\"@FIELD\")@WHERE_CONDITION)\n" +
-                "    |eval()\n" +
-                "        .keep('@FIELD')\n\n" +
-                "var data = streamData\n" +
-                "    |@STATISTICS('@FIELD')\n" +
-                "        .as('value')\n\n" +
-                "var trigger = data\n" +
-                "    |alert()\n" +
-                "@ALERT_CONDITION" +
-                "        .id('{{ .TaskName }}')\n" +
-                "        .stateChangesOnly()\n" +
-                "        .post('@AGENT_MANAGER_IP/api/o11y/trigger/policy/receiver')\n\n" +
-                "trigger\n" +
-                "    |httpOut('output')";
+    public void makeTickScript(TriggerPolicyInfo policy) {
+        String tick =
+            """
+            var db = '@DATABASE'
+            var rp = '@RETENTION_POLICY'
+            var measurement = '@MEASUREMENT'
+            var groupBy = @GROUP_BY
 
-        String measurement = triggerPolicy.getMetric();
-        String field = triggerPolicy.getField();
-        String whereCondition = "";
-        if("cpu".equals(measurement))
-            whereCondition = " AND \"cpu\" != 'cpu-total'";
-        String statistics = triggerPolicy.getStatistics();
-        String alertCondition = getAlertCondition(triggerPolicy);
+            var streamData = stream
+                |from()
+                    .database(db)
+                    .retentionPolicy(rp)
+                    .measurement(measurement)
+                    .groupBy(groupBy)
+                    .where(lambda: isPresent("@FIELD")@WHERE_CONDITION)
+                |eval()
+                    .keep("@FIELD")
 
-        tickScript = tickScript.replaceAll("@MEASUREMENT", measurement)
-                .replaceAll("@FIELD", field)
-                .replaceAll("@GROUP_BY", convertListToString(triggerPolicy.getGroupFields()))
-                .replaceAll("@WHERE_CONDITION", whereCondition)
-                .replaceAll("@STATISTICS", statistics)
-                .replaceAll("@ALERT_CONDITION", alertCondition)
-                .replaceAll("@AGENT_MANAGER_IP", agentManagerIp);
+            var data = streamData
+                |@STATISTICS("@FIELD")
+                    .as("value")
 
-        this.tickScript = tickScript;
+            var trigger = data
+                |alert()
+            @ALERT_CONDITION
+                    .id('{{ .TaskName }}')
+                    .stateChangesOnly()
+                    .post('@AGENT_MANAGER_IP/api/o11y/trigger/policy/receiver')
+
+            trigger
+                |httpOut('output')
+            """;
+
+        String where = "cpu".equals(policy.getMetric()) ? " AND \"cpu\" != 'cpu-total'" : "";
+
+        this.tickScript = tick
+            .replaceAll("@DATABASE", "")
+            .replaceAll("@RETENTION_POLICY", "")
+            .replaceAll("@MEASUREMENT", policy.getMetric())
+            .replaceAll("@GROUP_BY", convertListToString(policy.getGroupFields()))
+            .replaceAll("@WHERE_CONDITION", where)
+            .replaceAll("@FIELD", policy.getField())
+            .replaceAll("@STATISTICS", policy.getStatistics())
+            .replaceAll("@ALERT_CONDITION", getAlertCondition(policy))
+            .replaceAll("@AGENT_MANAGER_IP", this.agentManagerIp);
     }
 
     public void setTickScriptStorageInfo(String database, String retentionPolicy) {
-        String script = this.tickScript;
-        this.tickScript = script
-                .replaceAll("@DATABASE", database)
-                .replaceAll("@RETENTION_POLICY", retentionPolicy);
+        this.tickScript = this.tickScript
+            .replaceAll("@DATABASE", database)
+            .replaceAll("@RETENTION_POLICY", retentionPolicy);
     }
 
     public String convertListToString(List<String> groupByFields) {
-        List<String> fields = new ArrayList<>();
-        fields.add("target_id");
-        fields.add("ns_id");
-
+        List<String> fields = new ArrayList<>(List.of("target_id", "ns_id"));
         if (groupByFields != null && !groupByFields.isEmpty()) {
             fields.addAll(groupByFields);
         }
-        String result = "['" + String.join("', '", fields) + "']";
-
-        return result;
+        return fields.stream()
+            .map(f -> "'" + f + "'")
+            .collect(Collectors.joining(", ", "[", "]"));
     }
 
-    private String getAlertCondition(TriggerPolicyInfo triggerPolicy) {
-        Map<String, String> thresholds = parseThresholds(triggerPolicy.getThreshold());
-        StringBuilder alertCondition = new StringBuilder();
-        String[] levels = {"crit", "warn", "info"};
-
-        for (String level : levels) {
+    private String getAlertCondition(TriggerPolicyInfo policy) {
+        Map<String, String> thresholds = parseThresholds(policy.getThreshold());
+        StringBuilder sb = new StringBuilder();
+        for (String level : List.of("crit", "warn", "info")) {
             if (thresholds.containsKey(level)) {
-                alertCondition.append("        .")
-                        .append(level)
-                        .append("(lambda: ")
-                        .append(thresholds.get(level).replace("value", "\"value\""))
-                        .append(")\n");
+                sb.append("        .").append(level)
+                    .append("(lambda: ")
+                    .append(thresholds.get(level).replace("value", "\"value\""))
+                    .append(")\n");
             }
         }
-
-        return String.valueOf(alertCondition);
+        return sb.toString();
     }
 
-    private Map<String, String> parseThresholds(String thresholdJson) {
-        ObjectMapper mapper = new ObjectMapper();
+    private Map<String, String> parseThresholds(String json) {
         try {
-            return mapper.readValue(thresholdJson, new TypeReference<Map<String, String>>() {});
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Failed to parse threshold JSON", e);
+            return new ObjectMapper().readValue(json, new TypeReference<>() {});
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid threshold JSON: " + json, e);
         }
     }
 }

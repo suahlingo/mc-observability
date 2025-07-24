@@ -6,12 +6,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.Builder;
 import mcmp.mc.observability.mco11yagent.monitoring.annotation.Base64EncodeField;
 import mcmp.mc.observability.mco11yagent.monitoring.enums.ResultCode;
 
 @Setter
 @Getter
 @AllArgsConstructor
+@Builder
 public class ResBody<T> {
     @JsonIgnore
     private ResultCode code;

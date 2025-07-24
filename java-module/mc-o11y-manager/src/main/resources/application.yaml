@@ -4,6 +4,26 @@ project:
 server:
   port: 18080
 
+
+otel:
+  exporter:
+    otlp:
+      endpoint: ${TEMPO_URL:http://tempo:4318}http://<tempo ip>:4318
+      compression: gzip
+      protocol: grpc
+  logs:
+    exporter: none
+  metrics:
+    exporter: none
+  resource:
+    attributes:
+      service.name: mc-o11y-manager-tracing
+  instrumentation:
+    micrometer:
+      enabled: true
+
+
+
 feign:
   okhttp:
     enabled: true

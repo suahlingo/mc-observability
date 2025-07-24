@@ -1,11 +1,11 @@
 package mcmp.mc.observability.mco11yagent.trigger.controller;
 
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import mcmp.mc.observability.mco11yagent.monitoring.model.dto.ResBody;
 import mcmp.mc.observability.mco11yagent.trigger.annotation.TriggerBase64Decode;
-import mcmp.mc.observability.mco11yagent.trigger.common.TriggerConstants;
 import mcmp.mc.observability.mco11yagent.trigger.annotation.TriggerBase64Encode;
+import mcmp.mc.observability.mco11yagent.trigger.common.TriggerConstants;
 import mcmp.mc.observability.mco11yagent.trigger.model.TriggerPolicyInfo;
 import mcmp.mc.observability.mco11yagent.trigger.model.dto.TriggerPolicyCreateDto;
 import mcmp.mc.observability.mco11yagent.trigger.model.dto.TriggerPolicyUpdateDto;
@@ -21,7 +21,7 @@ public class TriggerPolicyController {
 
     private final TriggerPolicyService triggerPolicyService;
 
-    @ApiOperation(value = "Get Trigger Policy all list")
+    @Operation(summary = "Get all Trigger Policies")
     @TriggerBase64Encode
     @GetMapping
     public ResBody<List<TriggerPolicyInfo>> list() {
@@ -30,32 +30,33 @@ public class TriggerPolicyController {
         return res;
     }
 
-    @ApiOperation(value = "")
+    @Operation(summary = "Get Trigger Policy details by policySeq")
     @TriggerBase64Encode
     @GetMapping("/{policySeq}")
     public ResBody<TriggerPolicyInfo> detail(@PathVariable("policySeq") Long seq) {
         return triggerPolicyService.getDetail(new ResBody<>(), seq);
     }
 
-    @ApiOperation(value = "Create request Trigger Policy")
+    @Operation(summary = "Create a new Trigger Policy")
     @TriggerBase64Decode(TriggerPolicyCreateDto.class)
     @PostMapping
-    public ResBody<Void> create(@RequestBody TriggerPolicyCreateDto triggerPolicyCreateDto) {
-        return triggerPolicyService.createPolicy(triggerPolicyCreateDto);
+    public ResBody<Void> create(@RequestBody TriggerPolicyCreateDto dto) {
+        return triggerPolicyService.createPolicy(dto);
     }
 
-    @ApiOperation(value = "Update request Trigger Policy")
+    @Operation(summary = "Update an existing Trigger Policy")
     @TriggerBase64Decode(TriggerPolicyUpdateDto.class)
     @PatchMapping("/{policySeq}")
-    public ResBody<Void> update(@PathVariable("policySeq") Long seq, @RequestBody TriggerPolicyUpdateDto triggerPolicyUpdateDto) {
-        triggerPolicyUpdateDto.setSeq(seq);
-        return triggerPolicyService.updatePolicy(triggerPolicyUpdateDto);
+    public ResBody<Void> update(@PathVariable("policySeq") Long seq,
+        @RequestBody TriggerPolicyUpdateDto dto) {
+        dto.setSeq(seq);
+        return triggerPolicyService.updatePolicy(dto);
     }
 
-    @ApiOperation(value = "Delete Request Trigger Policy")
+    @Operation(summary = "Delete a Trigger Policy")
     @DeleteMapping("/{policySeq}")
     public ResBody<Void> delete(@PathVariable("policySeq") Long policySeq) {
         return triggerPolicyService.deletePolicy(policySeq);
     }
-
 }
+

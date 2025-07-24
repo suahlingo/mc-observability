@@ -1,32 +1,33 @@
 package mcmp.mc.observability.mco11yagent.trigger.model;
 
-import io.swagger.annotations.ApiModelProperty;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import mcmp.mc.observability.mco11yagent.trigger.annotation.TriggerBase64DecodeField;
 import mcmp.mc.observability.mco11yagent.trigger.model.dto.TriggerSlackUserCreateDto;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Data
 public class TriggerSlackUserInfo {
-    @ApiModelProperty(value = "Sequence by Trigger Slack User", example = "1")
+
+    @Schema(description = "Sequence by Trigger Slack User", example = "1")
     @JsonProperty("seq")
     private Long seq;
 
-    @ApiModelProperty(value = "Sequence by trigger policy", example = "1")
+    @Schema(description = "Sequence by trigger policy", example = "1")
     @JsonProperty("policy_seq")
     private Long policySeq;
 
-    @ApiModelProperty(value = "Trigger Alert Slack User name")
+    @Schema(description = "Trigger Alert Slack User name", example = "monitoring-bot")
     @JsonProperty("name")
     private String name;
 
+    @Schema(description = "Slack token (Base64 Encoded)", example = "dG9rZW4xMjM=")
     @TriggerBase64DecodeField
-    @ApiModelProperty(value = "Base64 Encoded value")
     @JsonProperty("token")
     private String token;
 
+    @Schema(description = "Slack channel name (Base64 Encoded)", example = "I21vbnN0ZXI=")
     @TriggerBase64DecodeField
-    @ApiModelProperty(value = "Base64 Encoded value")
     @JsonProperty("channel")
     private String channel;
 

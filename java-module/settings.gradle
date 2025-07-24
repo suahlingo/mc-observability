@@ -1,3 +1,4 @@
 rootProject.name = 'java-module'
 include('mc-o11y-manager')
 include('mc-o11y-agent')
+include('mc-o11y-tracing')

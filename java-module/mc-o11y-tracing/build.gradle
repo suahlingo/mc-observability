@@ -1,0 +1,84 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencyManagement {
+    imports {
+        mavenBom("io.opentelemetry:opentelemetry-bom:1.34.1")
+        mavenBom("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:2.17.0")
+        mavenBom("io.micrometer:micrometer-tracing-bom:1.5.1")
+    }
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    implementation "io.opentelemetry.instrumentation:opentelemetry-spring-boot-starter"
+
+
+    implementation "io.opentelemetry:opentelemetry-api"
+    implementation "io.opentelemetry:opentelemetry-sdk"
+
+
+    implementation "io.opentelemetry:opentelemetry-exporter-otlp"
+
+
+    implementation "io.opentelemetry:opentelemetry-extension-trace-propagators"
+    implementation "io.opentelemetry:opentelemetry-exporter-logging"
+
+
+    implementation "io.micrometer:micrometer-tracing"
+    implementation "io.micrometer:micrometer-tracing-bridge-otel"
+
+
+    implementation 'io.github.openfeign:feign-micrometer:12.3'
+
+    implementation "io.micrometer:micrometer-registry-otlp"
+    implementation "org.springframework.boot:spring-boot-starter-actuator"
+
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+bootJar {
+    enabled = false
+}
+
+jar {
+    enabled = true
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            groupId = 'com.github.m-cmp'
+            artifactId = 'mc-o11y-tracing'
+            version = '1.0.0'
+        }
+    }
+}

@@ -1,7 +1,0 @@
-jdk:
-  - openjdk21
-
-build:
-  gradle:
-    buildFile: mc-observability/java-module/mc-o11y-tracing/build.gradle
-    tasks: assemble

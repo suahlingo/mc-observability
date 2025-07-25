@@ -1,6 +1,5 @@
 plugins {
     id 'java-library'
-    id 'maven-publish'
 }
 
 java {
@@ -72,13 +71,3 @@ jar {
     enabled = true
 }
 
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-            groupId = 'com.github.suahlingo'
-            artifactId = 'mc-o11y-tracing'
-            version = 'v0.0.1'
-        }
-    }
-}

@@ -205,7 +205,7 @@ services:
     # - TB_LOGWRITER=both
     # - TB_NODE_ENV=development
     healthcheck: # for CB-Tumblebug
-      test: ["CMD", "curl", "-f", "http://localhost:1323/tumblebug/readyz"]
+      test: [ "CMD", "curl", "-f", "http://localhost:1323/tumblebug/readyz" ]
       interval: 1m
       timeout: 5s
       retries: 3
@@ -252,7 +252,7 @@ services:
       - --auth-token
       - simple
     healthcheck: # for etcd
-      test: ["CMD", "/usr/local/bin/etcd", "--version"]
+      test: [ "CMD", "/usr/local/bin/etcd", "--version" ]
       interval: 1m
       timeout: 5s
       retries: 3
@@ -278,7 +278,7 @@ services:
       - POSTGRES_PASSWORD=cb_tumblebug
       - POSTGRES_DB=cb_tumblebug
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U cb_tumblebug"]
+      test: [ "CMD-SHELL", "pg_isready -U cb_tumblebug" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -311,7 +311,7 @@ services:
       - SPIDER_HISCALL_LOG_LEVEL=error
       - ID_TRANSFORM_MODE=OFF
     healthcheck: # for CB-Spider
-      test: ["CMD", "curl", "-f", "http://localhost:1024/spider/readyz"]
+      test: [ "CMD", "curl", "-f", "http://localhost:1024/spider/readyz" ]
       interval: 1m
       timeout: 5s
       retries: 3
@@ -351,7 +351,7 @@ services:
     image: busybox:stable
     container_name: mc-observability-influx-init-volumes
     restart: no
-    command: ["sh", "-c", "chown -R 1500:1500 /var/lib/influxdb"]
+    command: [ "sh", "-c", "chown -R 1500:1500 /var/lib/influxdb" ]
     volumes:
       - /docker/influxdb_data:/var/lib/influxdb
     user: root
@@ -391,7 +391,7 @@ services:
     image: busybox:stable
     container_name: mc-observability-loki-init-volumes
     restart: no
-    command: ["sh", "-c", "chown -R 10001:10001 /loki"]
+    command: [ "sh", "-c", "chown -R 10001:10001 /loki" ]
     volumes:
       - /docker/loki_data:/loki
     user: root
@@ -433,6 +433,7 @@ services:
       - internal_network
       - external_network
     ports:
+      - "3000:3000"
       - "8443:8443"
     depends_on:
       mc-observability-grafana-init-volumes:
@@ -478,7 +479,7 @@ services:
     image: busybox:stable
     container_name: mc-observability-grafana-init-volumes
     restart: no
-    command: ["sh", "-c", "chown -R 472:472 /var/lib/grafana && chown -R 472:472 /var/log/grafana"]
+    command: [ "sh", "-c", "chown -R 472:472 /var/lib/grafana && chown -R 472:472 /var/log/grafana" ]
     volumes:
       - /docker/grafana_data/data:/var/lib/grafana
       - /docker/grafana_data/log:/var/log/grafana
@@ -647,8 +648,8 @@ services:
     container_name: rabbitmq
     volumes:
       - ./rabbitmq/etc:/etc/rabbitmq
-      - /docker/rabbitmq_data:/var/lib/rabbitmq
-#      - ./rabbitmq/logs:/var/log/rabbitmq
+      - ./rabbitmq/data:/var/lib/rabbitmq
+      - ./rabbitmq/etc/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
     depends_on:
       mc-observability-rabbitmq-init-volumes:
         condition: service_completed_successfully
@@ -656,8 +657,6 @@ services:
       - "5672:5672"    # AMQP
       - "1883:1883"    # MQTT
       - "15672:15672"  # Dashboard
-      # - "8883:8883"    # MQTT/TLS (optional)
-      # - "15675:15675"  # MQTT WebSocket (optional)
     environment:
       RABBITMQ_ENABLED_PLUGINS_FILE: "/etc/rabbitmq/enabled_plugins"
       RABBITMQ_LOAD_DEFINITIONS: "/etc/rabbitmq/definitions.json"
@@ -684,7 +683,7 @@ services:
         chmod 600 /var/lib/rabbitmq/.erlang.cookie && \
         chown -R 999:999 /var/lib/rabbitmq /var/log/rabbitmq
     volumes:
-      - /docker/rabbitmq_data:/var/lib/rabbitmq
+      - ./rabbitmq/data:/var/lib/rabbitmq
     user: root
     init: true
     networks:
